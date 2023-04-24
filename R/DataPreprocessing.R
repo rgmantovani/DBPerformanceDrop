@@ -35,6 +35,16 @@ DataPreprocessing = function(data) {
 	# removing high correlated features
 	data5 = RemoveHighCorrelatedFeatures(data = data4, perc.cor = 0.9)
 	
+	# define Labels
+	data6 = DefineTarget(temp = data5)
+
+
+	# TODO: all atributtes, except the class numerics
+
+
+	# TODO: scale data between [0,1]
+	
+
 	return(data5)
 }
 
@@ -62,15 +72,40 @@ RemoveHighCorrelatedFeatures = function(data, perc.cor = 0.99) {
 	return(dataNew)
 }
 
-
 # -------------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------------
 
-# DataPreProcessingNumerical = function(data) {
-# 	# categoricos -> numerics/binários
-# 	#obj = mlr::createDummyFeatures(obj = data3, method = "1-of-n")
-# 	# normalização entre [0,1]
-# }
+# df4 = Se (Uso de CPU >= 75%) OU (Memoria >= 95%) OU (CPU_LOAD_SHORT >=5 ) Então QUEDA. 
+ # if df.loc[i.Index, 'CPU_LOAD_SHORT'] == 1 or df.loc[i.Index, 'USO_MEMORIA'] == 1 or int(df.loc[i.Index, 'TAMANHO_DO_BANCO_GB']) <= 25: # OK!
+
+DefineTarget = function(temp) {
 	
+	temp$Target = 0
+	
+	# checking instances where the use of CPU is above 75%
+	op1.ids = which(temp$USO_TOTAL_CPU >= 75) 
+
+	# checking instances where the use of memory is above 95%
+	memoryUse = temp$MEMORIA_FREE/temp$MEMORIA_TOTAL
+	op2.ids = which(memoryUse >= 0.95) 
+
+	# checking instances where the use of CPU load short is above 5%
+	op3.ids = which(temp$CPU_LOAD_SHORT > 5)
+	
+	# unifying all the identified ids
+	ids = union(op1.ids, op2.ids, op3.ids)
+	temp[ids, "Target"] = 1
+
+	# removing features used to define Target
+	temp$MEMORIA_FREE  = NULL 
+	temp$MEMORIA_TOTAL = NULL
+	temp$USO_TOTAL_CPU = NULL
+	temp$CPU_LOAD_SHORT = NULL
+
+	temp$Target = as.factor(temp$Target)
+
+	return(temp)
+}
+
 # -------------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------------
