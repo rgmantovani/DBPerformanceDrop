@@ -5,9 +5,31 @@
 # Installing required packages
 # ------------------------------
 
-# install.packages(c("mlr", "dplyr"))
+# If they are not installed, please, uncomment the following lines:
+# install.packages(c("ranger", "e1071", kknn", "mlr", "rpart", 
+#   "dplyr", "reshape2", "ggplot2"))
+
+# ---------------------------
+# Loading packages
+# ---------------------------
+
+library(mlr, quietly = TRUE, warn.conflicts = FALSE)
+
+# ---------------------------
+# Seed for reproducibility
+# ---------------------------
+
+set.seed(123)
+
+# ---------------------------
+# MLR settings
+# ---------------------------
+
+mlr::configureMlr(on.learner.error = "warn")
+mlr::configureMlr(show.info = TRUE)
 
 # ------------------------------
+# Feature names
 # ------------------------------
 
 # features selected by an expert
@@ -21,5 +43,10 @@ EXPERT.FEATURES = c("DB_NAME","CPU_LOAD_SHORT","USO_TOTAL_CPU","NR_CPU","MEMORIA
 DROP.FEATURES = c("HITRATIO_COL1", "HITRATIO_COL2", "HITRATIO_COL3", "BKP_LOCATION",
     "DTHORACONSULTA","DT_PACOTE_ANTIGO") # integrate dates after
 
+# ------------------------------
+# ------------------------------
+
+ALGOS.MLR  = c("rpart", "kknn", "multinom", "ranger", "svm", "nnet", "naiveBayes")
+   
 # -------------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------------
