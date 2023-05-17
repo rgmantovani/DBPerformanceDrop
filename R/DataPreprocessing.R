@@ -1,14 +1,13 @@
 # -------------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------------
 
-DataPreprocessing = function(data) {
+DataPreprocessing = function(data, define.targets = FALSE) {
 	
-	#character to factor 
+	# converting characters to factors 
 	data1 = data 
 	for(cn in colnames(data1)) {
 		if(class(data1[,cn]) == "character") {
-			data1[,cn] = as.factor(data1[,cn])
-			
+			data1[,cn] = as.factor(data1[,cn])		
 		} 
 		na.ids = which(data1[,cn] == "")
 		data1[na.ids, cn] = NA	
@@ -25,7 +24,7 @@ DataPreprocessing = function(data) {
 			integer = mlr::imputeMean(),
 			numeric = mlr::imputeMean(),
 			logical = mlr::imputeMode() 
-	  	)
+	  	) 
 	)
 	data3 = res$data
 
@@ -36,16 +35,18 @@ DataPreprocessing = function(data) {
 	data5 = RemoveHighCorrelatedFeatures(data = data4, perc.cor = 0.9)
 	
 	# define Labels
-	data6 = DefineTarget(temp = data5)
+	if(define.targets) {
+		data5 = DefineTargets(temp = data5)
+	}
 
+	# all atributtes must be numeric, except the target
+	for(i in 1:(ncol(data5)-1)) {
+		data5[,i] = as.numeric(data5[,i])
+	}
 
-	# TODO: all atributtes, except the class numerics
-
-
-	# TODO: scale data between [0,1]
-	
-
-	return(data5)
+	# Scale data between [0,1]
+	data6 = mlr::normalizeFeatures(obj = data5, target = "Target", method = "range", range = c(0,1))
+	return(data6)
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -76,9 +77,10 @@ RemoveHighCorrelatedFeatures = function(data, perc.cor = 0.99) {
 # -------------------------------------------------------------------------------------------------
 
 # df4 = Se (Uso de CPU >= 75%) OU (Memoria >= 95%) OU (CPU_LOAD_SHORT >=5 ) Então QUEDA. 
- # if df.loc[i.Index, 'CPU_LOAD_SHORT'] == 1 or df.loc[i.Index, 'USO_MEMORIA'] == 1 or int(df.loc[i.Index, 'TAMANHO_DO_BANCO_GB']) <= 25: # OK!
+# if df.loc[i.Index, 'CPU_LOAD_SHORT'] == 1 or df.loc[i.Index, 'USO_MEMORIA'] == 1 or 
+# int(df.loc[i.Index, 'TAMANHO_DO_BANCO_GB']) <= 25: # OK!
 
-DefineTarget = function(temp) {
+DefineTargets = function(temp) {
 	
 	temp$Target = 0
 	
@@ -93,13 +95,13 @@ DefineTarget = function(temp) {
 	op3.ids = which(temp$CPU_LOAD_SHORT > 5)
 	
 	# unifying all the identified ids
-	ids = union(op1.ids, op2.ids, op3.ids)
+	ids = union(union(op1.ids, op2.ids), op3.ids)
 	temp[ids, "Target"] = 1
 
 	# removing features used to define Target
-	temp$MEMORIA_FREE  = NULL 
-	temp$MEMORIA_TOTAL = NULL
-	temp$USO_TOTAL_CPU = NULL
+	temp$MEMORIA_FREE   = NULL 
+	temp$MEMORIA_TOTAL  = NULL
+	temp$USO_TOTAL_CPU  = NULL
 	temp$CPU_LOAD_SHORT = NULL
 
 	temp$Target = as.factor(temp$Target)
